@@ -163,6 +163,48 @@ export interface AdminSubscriptionBalancesQuery {
   sort_dir?: "asc" | "desc";
 }
 
+/** Customer plan rate item from /api/admin/customer_plan_rate/ */
+export interface CustomerPlanRatePlan {
+  id: number;
+  name: string;
+}
+
+export interface CustomerPlanRateCustomer {
+  id: number;
+  name: string;
+}
+
+export interface CustomerPlanRateItem {
+  id: number;
+  plan_id: number;
+  affiliate_discount: number;
+  sub_affiliate_discount: number;
+  total_billing_cycle: number;
+  created_by: number;
+  created_at: string;
+  updated_by: number;
+  updated_at: string;
+  customer_id: number;
+  plan: CustomerPlanRatePlan;
+  customer: CustomerPlanRateCustomer;
+}
+
+export interface CustomerPlanRateResponse {
+  data: CustomerPlanRateItem[];
+  page: number;
+  page_size: number;
+  total: number;
+}
+
+export interface CustomerPlanRateQuery {
+  customer_id: number;
+  plan_id?: number;
+  page?: number;
+  page_size?: number;
+  sort_field?: string;
+  sort_dir?: string;
+}
+
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_URL,
   prepareHeaders: (headers, { getState }) => {
@@ -241,6 +283,7 @@ export const adminApi = createApi({
   tagTypes: [
     "AdminBalances",
     "AdminCustomerRates",
+    "AdminCustomerPlanRate",
     "AdminPlanSettings",
     "AdminPlanRateSetting",
     "AdminCompanies",
@@ -356,6 +399,8 @@ export const adminApi = createApi({
       invalidatesTags: (_result, _error, { id }) => [
         "AdminPlanRateSetting",
         { type: "AdminPlanRateSetting", id: String(id) },
+        "AdminCustomerPlanRate",
+        { type: "AdminCustomerPlanRate", id: String(id) },
       ],
     }),
     getAdminCompanies: builder.query<AdminCompany[], void>({
@@ -415,6 +460,52 @@ export const adminApi = createApi({
       },
       providesTags: ["AdminSubscriptionBalances"],
     }),
+    getAdminCustomerPlanRates: builder.query<
+      CustomerPlanRateResponse,
+      CustomerPlanRateQuery
+    >({
+      query: (params) => {
+        const {
+          customer_id,
+          plan_id,
+          page = 1,
+          page_size = 20,
+          sort_field,
+          sort_dir,
+        } = params;
+
+        return {
+          url: "/admin/customer_plan_rate/",
+          params: {
+            customer_id,
+            plan_id,
+            page,
+            page_size,
+            sort_field,
+            sort_dir,
+          },
+        };
+      },
+      providesTags: ["AdminCustomerPlanRate"],
+    }),
+    getCustomerPlanRateById: builder.query<CustomerPlanRateItem, number>({
+      query: (id) => ({
+        url: `/admin/customer_plan_rate/${id}`,
+      }),
+      providesTags: (_result, _error, id) => [
+        { type: "AdminCustomerPlanRate", id: String(id) },
+      ],
+    }),
+    generateMissingCustomerPlanRates: builder.mutation<
+      { message?: string } | unknown,
+      number
+    >({
+      query: (customer_id) => ({
+        url: `/admin/customer_plan_rate/generate_missing/${customer_id}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["AdminCustomerPlanRate"],
+    }),
   }),
 });
 
@@ -429,4 +520,7 @@ export const {
   useGetAdminCompaniesQuery,
   useGetAdminAffiliateCustomersQuery,
   useGetAdminSubscriptionBalancesQuery,
+  useGetAdminCustomerPlanRatesQuery,
+  useGetCustomerPlanRateByIdQuery,
+  useGenerateMissingCustomerPlanRatesMutation,
 } = adminApi;
