@@ -92,6 +92,20 @@ export interface AdminSubscriptionBalance {
   updated_at: string;
 }
 
+export interface AdminWalletPayout {
+  id: number;
+  amount: number;
+  status: string;
+  affiliate_customer_id: number;
+  customer_name: string;
+  created_at: string;
+  approved_amount: number | null;
+  approved_date: string | null;
+  reference_num?: string | null;
+  note?: string | null;
+  approved_by?: number | null;
+}
+
 export interface AdminAffiliateCustomer {
   id: number;
   active: boolean;
@@ -112,6 +126,8 @@ export interface AdminAffiliateCustomer {
     id: number;
     name: string;
   } | null;
+  wallet_total: number;
+  pending_payout: number;
 }
 
 export interface AdminCompany {
@@ -147,7 +163,7 @@ export interface AdminPlanSettingsQuery {
 
 export interface AdminAffiliateCustomersQuery {
   company_id?: string;
-  search?: string;
+  search_query?: string;
   page?: number;
   page_size?: number;
 }
@@ -156,7 +172,19 @@ export interface AdminSubscriptionBalancesQuery {
   claimed?: boolean;
   claim_id?: number;
   customer_id?: number;
+  page?: number;
+  page_size?: number;
+  sort_field?: string;
+  sort_dir?: "asc" | "desc";
+}
+
+export interface AdminWalletPayoutsQuery {
   company_id?: string;
+  status?: string;
+  customer_id?: number;
+  date_from?: string;
+  date_to?: string;
+  search_query?: string;
   page?: number;
   page_size?: number;
   sort_field?: string;
@@ -242,19 +270,13 @@ const baseQueryWithReauth: BaseQueryFn<
     }
 
     try {
-      const body = new URLSearchParams();
-      body.append("refresh_token", refreshToken);
-
       const refreshResult = await rawBaseQuery(
         {
           url: "/auth/refresh",
-          method: "POST",
-          body,
+          method: "GET",
           params: {
+            refresh: refreshToken,
             company_id: COMPANY_ID,
-          },
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
           },
         },
         api,
@@ -289,6 +311,7 @@ export const adminApi = createApi({
     "AdminCompanies",
     "AdminAffiliateCustomers",
     "AdminSubscriptionBalances",
+    "AdminWalletPayouts",
   ],
   endpoints: (builder) => ({
     getAdminBalances: builder.query<
@@ -414,13 +437,14 @@ export const adminApi = createApi({
       AdminAffiliateCustomersQuery | void
     >({
       query: (params) => {
-        const { company_id, search, page = 1, page_size = 20 } = params || {};
+        const { company_id, search_query, page = 1, page_size = 20 } =
+          params || {};
 
         return {
           url: "/admin/affiliate_customer/",
           params: {
             company_id,
-            search,
+            search_query,
             page,
             page_size,
           },
@@ -437,7 +461,6 @@ export const adminApi = createApi({
           claimed,
           claim_id,
           customer_id,
-          company_id,
           page = 1,
           page_size = 20,
           sort_field,
@@ -450,7 +473,6 @@ export const adminApi = createApi({
             claimed,
             claim_id,
             customer_id,
-            company_id,
             page,
             page_size,
             sort_field,
@@ -459,6 +481,62 @@ export const adminApi = createApi({
         };
       },
       providesTags: ["AdminSubscriptionBalances"],
+    }),
+    getAdminWalletPayouts: builder.query<
+      PaginatedResponse<AdminWalletPayout>,
+      AdminWalletPayoutsQuery | void
+    >({
+      query: (params) => {
+        const {
+          company_id,
+          status,
+          customer_id,
+          date_from,
+          date_to,
+          search_query,
+          page = 1,
+          page_size = 20,
+          sort_field,
+          sort_dir,
+        } = params || {};
+
+        return {
+          url: "/admin/wallet/payouts",
+          params: {
+            company_id,
+            status,
+            customer_id,
+            date_from,
+            date_to,
+            search_query,
+            page,
+            page_size,
+            sort_field,
+            sort_dir,
+          },
+        };
+      },
+      providesTags: ["AdminWalletPayouts"],
+    }),
+    approveAdminWalletPayout: builder.mutation<
+      AdminWalletPayout,
+      {
+        payoutId: number;
+        approved_amount: number;
+        reference_num: string;
+        note: string;
+      }
+    >({
+      query: ({ payoutId, approved_amount, reference_num, note }) => ({
+        url: `/admin/wallet/payout/${payoutId}/approve`,
+        method: "PUT",
+        body: {
+          approved_amount,
+          reference_num,
+          note,
+        },
+      }),
+      invalidatesTags: ["AdminWalletPayouts"],
     }),
     getAdminCustomerPlanRates: builder.query<
       CustomerPlanRateResponse,
@@ -496,6 +574,44 @@ export const adminApi = createApi({
         { type: "AdminCustomerPlanRate", id: String(id) },
       ],
     }),
+    updateCustomerPlanRate: builder.mutation<
+      CustomerPlanRateItem,
+      {
+        id: number;
+        affiliate_discount: number;
+        sub_affiliate_discount: number;
+        total_billing_cycle: number;
+      }
+    >({
+      query: ({
+        id,
+        affiliate_discount,
+        sub_affiliate_discount,
+        total_billing_cycle,
+      }) => ({
+        url: `/admin/customer_plan_rate/${id}`,
+        method: "PUT",
+        body: {
+          affiliate_discount,
+          sub_affiliate_discount,
+          total_billing_cycle,
+        },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        "AdminCustomerPlanRate",
+        { type: "AdminCustomerPlanRate", id: String(id) },
+      ],
+    }),
+    generateMissingReferredSubscriptions: builder.mutation<
+      { message?: string } | unknown,
+      number
+    >({
+      query: (customer_id) => ({
+        url: `/admin/subscription/create_missing/${customer_id}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["AdminSubscriptionBalances"],
+    }),
     generateMissingCustomerPlanRates: builder.mutation<
       { message?: string } | unknown,
       number
@@ -520,7 +636,11 @@ export const {
   useGetAdminCompaniesQuery,
   useGetAdminAffiliateCustomersQuery,
   useGetAdminSubscriptionBalancesQuery,
+  useGetAdminWalletPayoutsQuery,
+  useApproveAdminWalletPayoutMutation,
   useGetAdminCustomerPlanRatesQuery,
   useGetCustomerPlanRateByIdQuery,
+  useUpdateCustomerPlanRateMutation,
+  useGenerateMissingReferredSubscriptionsMutation,
   useGenerateMissingCustomerPlanRatesMutation,
 } = adminApi;

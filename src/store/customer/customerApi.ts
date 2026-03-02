@@ -143,19 +143,13 @@ const baseQueryWithReauth: BaseQueryFn<
     }
 
     try {
-      const body = new URLSearchParams();
-      body.append("refresh_token", refreshToken);
-
       const refreshResult = await rawBaseQuery(
         {
           url: "/auth/refresh",
-          method: "POST",
-          body,
+          method: "GET",
           params: {
+            refresh: refreshToken,
             company_id: COMPANY_ID,
-          },
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
           },
         },
         api,

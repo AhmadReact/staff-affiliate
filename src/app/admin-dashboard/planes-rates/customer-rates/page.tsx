@@ -27,7 +27,8 @@ import {
   useGetAdminCustomerPlanRatesQuery,
   useGetCustomerPlanRateByIdQuery,
   useGenerateMissingCustomerPlanRatesMutation,
-  useUpdatePlanRateSettingMutation,
+  useUpdateCustomerPlanRateMutation,
+  useGenerateMissingReferredSubscriptionsMutation,
 } from "@/store/admin/adminApi";
 import type {
   AdminAffiliateCustomer,
@@ -58,6 +59,21 @@ function EditRateForm({
   const [totalBillingCycle, setTotalBillingCycle] = useState(
     String(selectedRate.total_billing_cycle),
   );
+  const [isUnlimited, setIsUnlimited] = useState(
+    selectedRate.total_billing_cycle === -1,
+  );
+
+  const handleToggleUnlimited = () => {
+    setIsUnlimited((prev) => {
+      const next = !prev;
+      if (next) {
+        setTotalBillingCycle("-1");
+      } else if (totalBillingCycle === "-1") {
+        setTotalBillingCycle("");
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = () => {
     onUpdate(
@@ -95,7 +111,11 @@ function EditRateForm({
             />
           </Stack>
           <Stack spacing={0.5}>
-            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={500}
+            >
               Plan
             </Typography>
             <Typography variant="body1" fontWeight={600}>
@@ -103,7 +123,11 @@ function EditRateForm({
             </Typography>
           </Stack>
           <Stack spacing={0.5}>
-            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={500}
+            >
               Customer
             </Typography>
             <Typography variant="body1" fontWeight={600}>
@@ -130,15 +154,34 @@ function EditRateForm({
         onChange={(e) => setSubAffiliateDiscount(e.target.value)}
         inputProps={{ step: 0.01, min: 0 }}
       />
-      <TextField
-        label="Total Billing Cycle"
-        type="number"
-        size="small"
-        fullWidth
-        value={totalBillingCycle}
-        onChange={(e) => setTotalBillingCycle(e.target.value)}
-        inputProps={{ min: 0, step: 1 }}
-      />
+      <Stack spacing={0.5}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            label="Total Billing Cycle"
+            type="number"
+            size="small"
+            fullWidth
+            value={totalBillingCycle}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTotalBillingCycle(value);
+              setIsUnlimited(value === "-1");
+            }}
+            inputProps={{ min: 0, step: 1 }}
+            disabled={isUnlimited}
+          />
+          <Button
+            variant={isUnlimited ? "contained" : "outlined"}
+            size="small"
+            onClick={handleToggleUnlimited}
+          >
+            Unlimited
+          </Button>
+        </Stack>
+        <Typography variant="caption" color="text.secondary">
+          When set to Unlimited, this sends -1 for total billing cycles.
+        </Typography>
+      </Stack>
       <DialogActions sx={{ px: 0, pb: 0, pt: 1 }}>
         <Button onClick={onCancel} disabled={updateLoading}>
           Cancel
@@ -173,8 +216,8 @@ export default function AdminCustomerRatesPage() {
 
   const { data: customersResponse, isLoading: customersLoading } =
     useGetAdminAffiliateCustomersQuery({
-      company_id: selectedCompanyId ?? undefined,
-      search: search || undefined,
+      company_id: selectedCompanyId || undefined,
+      search_query: search || undefined,
       page: 1,
       page_size: 1000,
     });
@@ -199,13 +242,18 @@ export default function AdminCustomerRatesPage() {
   const [generateMissing, { isLoading: generateMissingLoading }] =
     useGenerateMissingCustomerPlanRatesMutation();
 
+  const [
+    generateMissingReferredSubscriptions,
+    { isLoading: generateMissingReferredLoading },
+  ] = useGenerateMissingReferredSubscriptionsMutation();
+
   const { data: selectedRate, isLoading: selectedRateLoading } =
     useGetCustomerPlanRateByIdQuery(selectedRateId!, {
       skip: selectedRateId == null,
     });
 
   const [updateRate, { isLoading: updateRateLoading }] =
-    useUpdatePlanRateSettingMutation();
+    useUpdateCustomerPlanRateMutation();
 
   const handleCloseModal = () => {
     setSelectedRateId(null);
@@ -233,6 +281,11 @@ export default function AdminCustomerRatesPage() {
   const handleCreateMissingPlans = () => {
     if (!selectedCustomer) return;
     generateMissing(selectedCustomer.customer.id);
+  };
+
+  const handleAddMissingReferredSubscriptions = () => {
+    if (!selectedCustomer) return;
+    generateMissingReferredSubscriptions(selectedCustomer.customer.id);
   };
 
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -302,6 +355,16 @@ export default function AdminCustomerRatesPage() {
           onClick={handleCreateMissingPlans}
         >
           {generateMissingLoading ? "Creating..." : "Create Missing Plans"}
+        </Button>
+        <Button
+          variant="contained"
+          size="small"
+          disabled={!selectedCustomer || generateMissingReferredLoading}
+          onClick={handleAddMissingReferredSubscriptions}
+        >
+          {generateMissingReferredLoading
+            ? "Adding..."
+            : "Add missing referred subscriptions"}
         </Button>
       </Box>
 
@@ -388,7 +451,12 @@ export default function AdminCustomerRatesPage() {
         )}
       </Paper>
 
-      <Dialog open={selectedRateId != null} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+      <Dialog
+        open={selectedRateId != null}
+        onClose={handleCloseModal}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           Edit Plan Rate
           {selectedRate ? ` — ${selectedRate.plan?.name ?? "Plan"}` : ""}
@@ -410,4 +478,3 @@ export default function AdminCustomerRatesPage() {
     </Box>
   );
 }
-

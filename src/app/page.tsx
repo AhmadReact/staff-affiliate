@@ -19,7 +19,7 @@ export default function SignInPage() {
     const userType = auth.user.user_type;
 
     if (userType === "staff") {
-      router.replace("/admin-dashboard");
+      router.replace("/admin-dashboard/customers");
     } else if (userType === "customer") {
       router.replace("/customer-dashboard");
     }
@@ -42,7 +42,7 @@ export default function SignInPage() {
       const userType = result.user?.user_type;
 
       if (userType === "staff") {
-        router.push("/admin-dashboard");
+        router.push("/admin-dashboard/customers");
       } else {
         router.push("/customer-dashboard");
       }

@@ -94,16 +94,13 @@ function mapApiToEarnings(
 
     const amountAbs = Math.abs(item.amount);
     const amountFormatted = `$${amountAbs.toFixed(2)}`;
-    const amountDisplay = item.amount < 0 ? `-${amountFormatted}` : amountFormatted;
+    const amountDisplay =
+      item.amount < 0 ? `-${amountFormatted}` : amountFormatted;
     const amountColor = item.amount < 0 ? "text-red-500" : "text-gray-800";
 
     const running = `$${item.running_balance.toFixed(2)}`;
 
-    const customer =
-      item.customer_name ??
-      (isPayout
-        ? "Bank Account"
-        : "N/A");
+    const customer = item.customer_name ?? (isPayout ? "N/A" : "N/A");
 
     const customerSub =
       item.customer_info ?? (item.customer_name ? null : "N/A");
@@ -121,7 +118,7 @@ function mapApiToEarnings(
     return {
       id: item.id,
       date,
-      description: isPayout ? "Payout" : item.description ?? "Earning",
+      description: isPayout ? "Payout" : (item.description ?? "Earning"),
       descSub,
       descAmount,
       type: item.entry_type,
@@ -296,68 +293,70 @@ export default function EarningsTable() {
               {!isLoading &&
                 !isError &&
                 paginatedEarnings.map((row, i) => (
-                <TableRow
-                  key={row.id}
-                  className={`border-b border-gray-50 hover:bg-blue-50/30 transition-colors ${
-                    i % 2 === 0 ? "bg-white" : "bg-gray-50/30"
-                  }`}
-                >
-                  {/* Date */}
-                  <TableCell className="px-4 py-3 text-gray-600 whitespace-nowrap font-medium">
-                    {row.date}
-                  </TableCell>
-
-                  {/* Description */}
-                  <TableCell className="px-4 py-3">
-                    <p className="font-semibold text-gray-700">
-                      {row.description}
-                    </p>
-                    {row.descAmount && (
-                      <p className="text-[10px] text-gray-400 mt-0.5">
-                        {row.descAmount}
-                      </p>
-                    )}
-                    {row.descSub && (
-                      <p className="text-[10px] text-gray-400">{row.descSub}</p>
-                    )}
-                  </TableCell>
-
-                  {/* Customer / Affiliate */}
-                  <TableCell className="px-4 py-3">
-                    <p className="font-semibold text-gray-700 whitespace-nowrap">
-                      {row.customer}
-                    </p>
-                    {row.customerSub && (
-                      <p className="text-[10px] text-gray-400 mt-0.5">
-                        {row.customerSub}
-                      </p>
-                    )}
-                  </TableCell>
-
-                  {/* Status */}
-                  <TableCell className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap ${
-                        getStatusClass(row.status)
-                      }`}
-                    >
-                      {row.status}
-                    </span>
-                  </TableCell>
-
-                  {/* Amount */}
-                  <TableCell
-                    className={`px-4 py-3 font-bold whitespace-nowrap ${row.amountColor}`}
+                  <TableRow
+                    key={row.id}
+                    className={`border-b border-gray-50 hover:bg-blue-50/30 transition-colors ${
+                      i % 2 === 0 ? "bg-white" : "bg-gray-50/30"
+                    }`}
                   >
-                    {row.amount}
-                  </TableCell>
+                    {/* Date */}
+                    <TableCell className="px-4 py-3 text-gray-600 whitespace-nowrap font-medium">
+                      {row.date}
+                    </TableCell>
 
-                  {/* Running */}
-                  <TableCell className="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">
-                    {row.running}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    {/* Description */}
+                    <TableCell className="px-4 py-3">
+                      <p className="font-semibold text-gray-700">
+                        {row.description}
+                      </p>
+                      {row.descAmount && (
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          {row.descAmount}
+                        </p>
+                      )}
+                      {row.descSub && (
+                        <p className="text-[10px] text-gray-400">
+                          {row.descSub}
+                        </p>
+                      )}
+                    </TableCell>
+
+                    {/* Customer / Affiliate */}
+                    <TableCell className="px-4 py-3">
+                      <p className="font-semibold text-gray-700 whitespace-nowrap">
+                        {row.customer}
+                      </p>
+                      {row.customerSub && (
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          {row.customerSub}
+                        </p>
+                      )}
+                    </TableCell>
+
+                    {/* Status */}
+                    <TableCell className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap ${getStatusClass(
+                          row.status,
+                        )}`}
+                      >
+                        {row.status}
+                      </span>
+                    </TableCell>
+
+                    {/* Amount */}
+                    <TableCell
+                      className={`px-4 py-3 font-bold whitespace-nowrap ${row.amountColor}`}
+                    >
+                      {row.amount}
+                    </TableCell>
+
+                    {/* Running */}
+                    <TableCell className="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">
+                      {row.running}
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
@@ -368,7 +367,8 @@ export default function EarningsTable() {
         <Box className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 border-t border-gray-100">
           <Typography variant="caption" className="text-xs text-gray-400">
             Showing {total === 0 ? 0 : startIndex + 1}–
-            {Math.min(startIndex + effectivePageSize, total)} of {total} transactions
+            {Math.min(startIndex + effectivePageSize, total)} of {total}{" "}
+            transactions
           </Typography>
           <div className="flex items-center gap-1">
             <button

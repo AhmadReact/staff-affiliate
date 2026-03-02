@@ -88,18 +88,14 @@ apiClient.interceptors.response.use(
       if (!isRefreshing) {
         isRefreshing = true;
         refreshPromise = (async () => {
-          const body = new URLSearchParams();
-          body.append("refresh_token", refreshToken);
-
-          const response = await axios.post(
+          const response = await axios.get(
             `${API_BASE_URL}/auth/refresh`,
-            body,
             {
               headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
                 Accept: "application/json",
               },
               params: {
+                refresh: refreshToken,
                 company_id: COMPANY_ID,
               },
               maxBodyLength: Infinity,

@@ -17,6 +17,8 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import Button from "@mui/material/Button";
+import Link from "next/link";
 import { ChevronDown, Search, Calendar, ArrowUpDown } from "lucide-react";
 import {
   useGetAffiliateCustomerReferralsQuery,
@@ -111,16 +113,19 @@ const COLUMNS = [
   "Customer",
   "City / State",
   "Date Signed Up",
-  "Plan Type",
+  "Plan Name",
   "Referral Type",
-  "Monthly Elem",
   "Comms Earned",
   "Status",
 ];
-const SORTABLE = ["Date Signed Up", "Plan Type"];
+const SORTABLE = ["Date Signed Up", "Plan Name"];
+
+interface ReferralListProps {
+  showViewAllButton?: boolean;
+}
 
 function mapApiToReferralRows(
-  api: AffiliateCustomerReferralsResponse | undefined
+  api: AffiliateCustomerReferralsResponse | undefined,
 ): Referral[] {
   if (!api || !api.data) return referrals;
 
@@ -158,7 +163,7 @@ function mapApiToReferralRows(
   });
 }
 
-export default function ReferralList() {
+export default function ReferralList({ showViewAllButton = true }: ReferralListProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [page, setPage] = useState(1);
   const [monthFilter, setMonthFilter] = useState<string>("");
@@ -168,14 +173,14 @@ export default function ReferralList() {
   const statusFilter =
     activeTab === 1 ? "active" : activeTab === 2 ? "cancelled" : "all";
 
-  const {
-    data,
-    isLoading,
-    isError,
-  } = useGetAffiliateCustomerReferralsQuery({
+  const hasMonth = !!monthFilter;
+  const hasYear = !!yearFilter;
+  const shouldApplyDateFilter = hasMonth && hasYear;
+
+  const { data, isLoading, isError } = useGetAffiliateCustomerReferralsQuery({
     status: statusFilter,
-    month: monthFilter ? Number(monthFilter) : undefined,
-    year: yearFilter ? Number(yearFilter) : undefined,
+    month: shouldApplyDateFilter ? Number(monthFilter) : undefined,
+    year: shouldApplyDateFilter ? Number(yearFilter) : undefined,
     sort_by: "date_signed_up",
     sort_dir: "desc",
     page,
@@ -190,7 +195,17 @@ export default function ReferralList() {
   return (
     <Card elevation={0}>
       {/* Header */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2.5, py: 1.5, flexWrap: "wrap", gap: 1.5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 2.5,
+          py: 1.5,
+          flexWrap: "wrap",
+          gap: 1.5,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Typography variant="subtitle2" sx={{ color: "text.primary" }}>
             Referral List
@@ -198,7 +213,10 @@ export default function ReferralList() {
           <Tabs
             value={activeTab}
             onChange={(_, v: number) => setActiveTab(v)}
-            sx={{ minHeight: 32, "& .MuiTabs-indicator": { height: 2, borderRadius: 1 } }}
+            sx={{
+              minHeight: 32,
+              "& .MuiTabs-indicator": { height: 2, borderRadius: 1 },
+            }}
           >
             {TABS.map((tab) => (
               <Tab
@@ -216,66 +234,98 @@ export default function ReferralList() {
           </Tabs>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Select
-            value={monthFilter}
-            onChange={(e) => {
-              setPage(1);
-              setMonthFilter(e.target.value as string);
-            }}
-            size="small"
-            displayEmpty
-            sx={{
-              minWidth: 120,
-              fontSize: "0.75rem",
-              height: 30,
-            }}
-          >
-            <MenuItem value="">
-              <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
-                All months
-              </Typography>
-            </MenuItem>
-            <MenuItem value="1">January</MenuItem>
-            <MenuItem value="2">February</MenuItem>
-            <MenuItem value="3">March</MenuItem>
-            <MenuItem value="4">April</MenuItem>
-            <MenuItem value="5">May</MenuItem>
-            <MenuItem value="6">June</MenuItem>
-            <MenuItem value="7">July</MenuItem>
-            <MenuItem value="8">August</MenuItem>
-            <MenuItem value="9">September</MenuItem>
-            <MenuItem value="10">October</MenuItem>
-            <MenuItem value="11">November</MenuItem>
-            <MenuItem value="12">December</MenuItem>
-          </Select>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            flexWrap: "wrap",
+            justifyContent: "flex-end",
+          }}
+        >
+          {showViewAllButton && (
+            <Button
+              component={Link}
+              href="/customer-dashboard/referrals"
+              variant="contained"
+              color="primary"
+              size="small"
+              sx={{ fontSize: "0.75rem", textTransform: "none" }}
+            >
+              View All Referrals
+            </Button>
+          )}
 
-          <Select
-            value={yearFilter}
-            onChange={(e) => {
-              setPage(1);
-              setYearFilter(e.target.value as string);
-            }}
-            size="small"
-            displayEmpty
-            sx={{
-              minWidth: 100,
-              fontSize: "0.75rem",
-              height: 30,
-            }}
-          >
-            <MenuItem value="">
-              <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
-                All years
-              </Typography>
-            </MenuItem>
-            <MenuItem value="2024">2024</MenuItem>
-            <MenuItem value="2025">2025</MenuItem>
-            <MenuItem value="2026">2026</MenuItem>
-          </Select>
-          <IconButton size="small" sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1.5, color: "text.secondary", p: 0.75 }}>
-            <Search size={13} />
-          </IconButton>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Select
+              value={monthFilter}
+              onChange={(e) => {
+                setPage(1);
+                setMonthFilter(e.target.value as string);
+              }}
+              size="small"
+              displayEmpty
+              sx={{
+                minWidth: 120,
+                fontSize: "0.75rem",
+                height: 30,
+              }}
+            >
+              <MenuItem value="">
+                <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                  All months
+                </Typography>
+              </MenuItem>
+              <MenuItem value="1">January</MenuItem>
+              <MenuItem value="2">February</MenuItem>
+              <MenuItem value="3">March</MenuItem>
+              <MenuItem value="4">April</MenuItem>
+              <MenuItem value="5">May</MenuItem>
+              <MenuItem value="6">June</MenuItem>
+              <MenuItem value="7">July</MenuItem>
+              <MenuItem value="8">August</MenuItem>
+              <MenuItem value="9">September</MenuItem>
+              <MenuItem value="10">October</MenuItem>
+              <MenuItem value="11">November</MenuItem>
+              <MenuItem value="12">December</MenuItem>
+            </Select>
+
+            <Select
+              value={yearFilter}
+              onChange={(e) => {
+                setPage(1);
+                setYearFilter(e.target.value as string);
+              }}
+              size="small"
+              displayEmpty
+              sx={{
+                minWidth: 100,
+                fontSize: "0.75rem",
+                height: 30,
+              }}
+            >
+              <MenuItem value="">
+                <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                  All years
+                </Typography>
+              </MenuItem>
+              <MenuItem value="2024">2024</MenuItem>
+              <MenuItem value="2025">2025</MenuItem>
+              <MenuItem value="2026">2026</MenuItem>
+            </Select>
+            <IconButton
+              size="small"
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 1.5,
+                color: "text.secondary",
+                p: 0.75,
+              }}
+            >
+              <Search size={13} />
+            </IconButton>
+          </Box>
         </Box>
       </Box>
 
@@ -290,7 +340,9 @@ export default function ReferralList() {
                 <TableCell key={col} sx={{ whiteSpace: "nowrap" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                     {col}
-                    {SORTABLE.includes(col) && <ArrowUpDown size={10} style={{ color: "#cbd5e1" }} />}
+                    {SORTABLE.includes(col) && (
+                      <ArrowUpDown size={10} style={{ color: "#cbd5e1" }} />
+                    )}
                   </Box>
                 </TableCell>
               ))}
@@ -299,14 +351,20 @@ export default function ReferralList() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={COLUMNS.length} sx={{ textAlign: "center", py: 3 }}>
+                <TableCell
+                  colSpan={COLUMNS.length}
+                  sx={{ textAlign: "center", py: 3 }}
+                >
                   Loading referrals...
                 </TableCell>
               </TableRow>
             )}
             {isError && !isLoading && (
               <TableRow>
-                <TableCell colSpan={COLUMNS.length} sx={{ textAlign: "center", py: 3 }}>
+                <TableCell
+                  colSpan={COLUMNS.length}
+                  sx={{ textAlign: "center", py: 3 }}
+                >
                   Failed to load referrals.
                 </TableCell>
               </TableRow>
@@ -322,17 +380,38 @@ export default function ReferralList() {
                     "&:last-child td": { border: 0 },
                   }}
                 >
-                  <TableCell sx={{ fontWeight: 600, color: "text.primary", whiteSpace: "nowrap" }}>
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      color: "text.primary",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {row.customer}
                   </TableCell>
-                  <TableCell sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>{row.city}</TableCell>
-                  <TableCell sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>{row.dateSignedUp}</TableCell>
-                  <TableCell sx={{ color: "text.primary", whiteSpace: "nowrap" }}>{row.planType}</TableCell>
-                  <TableCell sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>
+                  <TableCell
+                    sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
+                  >
+                    {row.city}
+                  </TableCell>
+                  <TableCell
+                    sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
+                  >
+                    {row.dateSignedUp}
+                  </TableCell>
+                  <TableCell
+                    sx={{ color: "text.primary", whiteSpace: "nowrap" }}
+                  >
+                    {row.planType}
+                  </TableCell>
+                  <TableCell
+                    sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
+                  >
                     {row.isSubAffiliate ? "Sub Affiliate" : "Direct"}
                   </TableCell>
-                  <TableCell sx={{ color: "text.primary", fontWeight: 500 }}>{row.monthlyElem}</TableCell>
-                  <TableCell sx={{ color: "text.primary", fontWeight: 600 }}>{row.commsEarned}</TableCell>
+                  <TableCell sx={{ color: "text.primary", fontWeight: 600 }}>
+                    {row.commsEarned}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={row.status}
@@ -349,10 +428,18 @@ export default function ReferralList() {
       <Divider />
 
       {/* Pagination */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2.5, py: 1.5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 2.5,
+          py: 1.5,
+        }}
+      >
         <Typography variant="caption" sx={{ color: "text.disabled" }}>
-          Showing {(page - 1) * pageSize + 1}–
-          {Math.min(page * pageSize, total)} of {total} referrals
+          Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)}{" "}
+          of {total} referrals
         </Typography>
         <Pagination
           count={pageCount}
@@ -361,8 +448,16 @@ export default function ReferralList() {
           size="small"
           shape="rounded"
           sx={{
-            "& .MuiPaginationItem-root": { fontSize: "0.75rem", minWidth: 28, height: 28 },
-            "& .Mui-selected": { bgcolor: "primary.main", color: "white", "&:hover": { bgcolor: "primary.dark" } },
+            "& .MuiPaginationItem-root": {
+              fontSize: "0.75rem",
+              minWidth: 28,
+              height: 28,
+            },
+            "& .Mui-selected": {
+              bgcolor: "primary.main",
+              color: "white",
+              "&:hover": { bgcolor: "primary.dark" },
+            },
           }}
         />
       </Box>

@@ -28,7 +28,7 @@ export default function RequireAuth({
 
       if (!isAllowed) {
         if (user.user_type === "staff") {
-          router.replace("/admin-dashboard");
+          router.replace("/admin-dashboard/customers");
         } else if (user.user_type === "customer") {
           router.replace("/customer-dashboard");
         } else {

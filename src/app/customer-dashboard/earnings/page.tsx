@@ -29,6 +29,7 @@ export default function CustomerEarningsPage() {
   const info = data as AffiliateCustomerInfo | undefined;
   const walletTotal = info?.wallet_total;
   const pendingPayout = info?.pending_payout;
+  const totalPayout = info?.total_payout;
   const claimAmountLabel = formatCurrency(walletTotal);
 
   const [isClaimOpen, setIsClaimOpen] = useState(false);
@@ -125,6 +126,11 @@ export default function CustomerEarningsPage() {
           <p className="text-sm text-gray-400 mt-0.5">
             Track your earnings and claim payouts.
           </p>
+          {error && (
+            <p className="text-xs text-red-500 mt-1">
+              Failed to load earnings info.
+            </p>
+          )}
         </div>
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap sm:shrink-0 self-start disabled:opacity-50 disabled:cursor-not-allowed"
@@ -146,7 +152,11 @@ export default function CustomerEarningsPage() {
         </div>
 
         {/* Right sidebar */}
-        <EarningsSidebar walletTotal={walletTotal} pendingPayout={pendingPayout} />
+        <EarningsSidebar
+          walletTotal={walletTotal}
+          pendingPayout={pendingPayout}
+          totalPayout={totalPayout}
+        />
       </div>
 
       {isClaimOpen && (

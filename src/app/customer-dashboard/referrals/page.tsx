@@ -14,7 +14,7 @@ export default function CustomerReferralsPage() {
         </p>
       </div>
 
-      <ReferralList />
+      <ReferralList showViewAllButton={false} />
     </div>
   );
 }

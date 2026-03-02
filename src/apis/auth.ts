@@ -71,17 +71,12 @@ export async function refreshTokenApi(
 ): Promise<RefreshResponse> {
   const companyId = COMPANY_ID ?? "1";
 
-  const body = new URLSearchParams();
-  body.append("refresh_token", refreshToken);
-
   try {
-    const response = await apiClient.post<
+    const response = await apiClient.get<
       RefreshResponse & { message?: string; error?: string }
-    >("/auth/refresh", body, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+    >("/auth/refresh", {
       params: {
+        refresh: refreshToken,
         company_id: companyId,
       },
       maxBodyLength: Infinity,

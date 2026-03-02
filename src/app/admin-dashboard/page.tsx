@@ -38,8 +38,7 @@ export default function AdminBalancesPage() {
 
   const { data: customersResponse, isLoading } =
     useGetAdminAffiliateCustomersQuery({
-      company_id: selectedCompanyId ?? undefined,
-      search: search || undefined,
+      search_query: search || undefined,
       page: page + 1,
       page_size: 1000,
     });
@@ -52,15 +51,10 @@ export default function AdminBalancesPage() {
       selectedCustomer
         ? {
             customer_id: selectedCustomer.customer.id,
-            company_id: selectedCompanyId ?? undefined,
             page: page + 1,
             page_size: rowsPerPage,
           }
-        : {
-            company_id: selectedCompanyId ?? undefined,
-            page: page + 1,
-            page_size: rowsPerPage,
-          },
+        : { page: page + 1, page_size: rowsPerPage },
     );
 
   const balanceRows = balancesResponse?.data ?? [];

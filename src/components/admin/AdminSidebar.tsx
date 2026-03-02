@@ -18,6 +18,7 @@ import {
   DollarSign,
   Settings,
   ChevronLeft,
+  Users,
   LucideIcon,
 } from "lucide-react";
 
@@ -36,9 +37,21 @@ type AdminNavItem =
 const navItems: AdminNavItem[] = [
   {
     type: "item",
+    label: "Customers",
+    icon: Users,
+    href: "/admin-dashboard/customers",
+  },
+  {
+    type: "item",
     label: "Balances",
     icon: LayoutDashboard,
     href: "/admin-dashboard",
+  },
+  {
+    type: "item",
+    label: "Payouts",
+    icon: DollarSign,
+    href: "/admin-dashboard/payouts",
   },
   {
     type: "section",

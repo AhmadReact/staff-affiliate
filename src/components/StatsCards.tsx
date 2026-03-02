@@ -229,6 +229,15 @@ function buildCardsFromInfo(info: AffiliateCustomerInfo): CardData[] {
       accent: "#22c55e",
       accentBg: "#ecfdf3",
     },
+    {
+      label: "Pending Payout",
+      value: `$${(info.pending_payout ?? 0).toFixed(2)}`,
+      sub: "Approved but not yet paid out",
+      period: "Current",
+      icon: Clock,
+      accent: "#f97316",
+      accentBg: "#fff7ed",
+    },
   ];
 }
 

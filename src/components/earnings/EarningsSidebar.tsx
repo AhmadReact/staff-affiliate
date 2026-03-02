@@ -8,6 +8,7 @@ interface SideCardProps {
 interface EarningsSidebarProps {
   walletTotal?: number;
   pendingPayout?: number;
+  totalPayout?: number;
 }
 
 function SideCard({ children, className = "" }: SideCardProps) {
@@ -23,6 +24,7 @@ function SideCard({ children, className = "" }: SideCardProps) {
 export default function EarningsSidebar({
   walletTotal,
   pendingPayout,
+  totalPayout,
 }: EarningsSidebarProps) {
   const formattedWalletTotal =
     walletTotal != null && !Number.isNaN(walletTotal)
@@ -40,6 +42,11 @@ export default function EarningsSidebar({
     pendingPayout != null && !Number.isNaN(pendingPayout) ? pendingPayout : 0;
   const lifetimeEarned = safeWalletTotal + safePendingPayout;
   const formattedLifetimeEarned = `$${lifetimeEarned.toFixed(2)}`;
+
+  const formattedTotalPayout =
+    totalPayout != null && !Number.isNaN(totalPayout)
+      ? `$${totalPayout.toFixed(2)}`
+      : "$0.00";
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 w-full lg:w-64 lg:shrink-0">
@@ -78,6 +85,16 @@ export default function EarningsSidebar({
         </p>
         <p className="text-3xl font-bold text-gray-800">
           {formattedLifetimeEarned}
+        </p>
+      </SideCard>
+
+      {/* Total Payout (below Lifetime Earned) */}
+      <SideCard>
+        <p className="text-xs text-gray-500 font-medium mb-1">
+          Total Payout
+        </p>
+        <p className="text-3xl font-bold text-gray-800">
+          {formattedTotalPayout}
         </p>
       </SideCard>
     </div>

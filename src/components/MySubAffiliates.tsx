@@ -7,7 +7,6 @@ import Chip from "@mui/material/Chip";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import { MessageSquare, Smartphone, Instagram } from "lucide-react";
-import Link from "next/link";
 
 interface Affiliate {
   name: string;
@@ -121,19 +120,6 @@ export default function MySubAffiliates() {
             <Typography variant="body2" sx={{ color: "text.primary", fontWeight: 700 }}>$8,511.50</Typography>
           </Box>
         </Box>
-
-        {/* CTA */}
-        <Button
-          component={Link}
-          href="/customer-dashboard/referrals"
-          variant="contained"
-          color="primary"
-          fullWidth
-          size="small"
-          sx={{ py: 1, fontSize: "0.8125rem" }}
-        >
-          View All Referrals
-        </Button>
       </CardContent>
     </Card>
   );
