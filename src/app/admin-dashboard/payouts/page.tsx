@@ -254,15 +254,28 @@ export default function AdminPayoutsPage() {
               <Typography variant="body2" color="text.secondary">
                 Customer: <strong>{selectedPayout.customer_name}</strong>
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Requested Amount:{" "}
-                <strong>
-                  {selectedPayout.amount.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </strong>
-              </Typography>
+              <Box
+                sx={{
+                  mt: 0.5,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 2,
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Requested Amount:{" "}
+                  <strong>
+                    {selectedPayout.amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary" align="right">
+                  Preferred Payment:{" "}
+                  <strong>{selectedPayout.preferred_payment}</strong>
+                </Typography>
+              </Box>
             </Box>
           ) : null}
           <Box

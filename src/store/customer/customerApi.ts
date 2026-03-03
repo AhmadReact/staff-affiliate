@@ -111,6 +111,12 @@ export interface AffiliateWalletPayoutRequest {
   amount: number;
 }
 
+export interface UpdateAffiliatePaymentRequest {
+  preferred_payment: "paypal" | "zelle";
+  payment_phone?: string;
+  payment_email?: string;
+}
+
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_URL,
   prepareHeaders: (headers, { getState }) => {
@@ -122,6 +128,7 @@ const rawBaseQuery = fetchBaseQuery({
     }
 
     headers.set("Accept", "application/json");
+    headers.set("company-id", COMPANY_ID);
     return headers;
   },
 });
@@ -254,6 +261,17 @@ export const customerApi = createApi({
       }),
       invalidatesTags: ["Customer"],
     }),
+    updateAffiliateCustomerPayment: builder.mutation<
+      unknown,
+      UpdateAffiliatePaymentRequest
+    >({
+      query: (body) => ({
+        url: "/affiliate_customer/update_payment",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Customer"],
+    }),
   }),
 });
 
@@ -263,5 +281,6 @@ export const {
   useGetAffiliateCustomerReferralsQuery,
   useGetAffiliateWalletEarningsQuery,
   useCreateAffiliateWalletPayoutMutation,
+  useUpdateAffiliateCustomerPaymentMutation,
 } = customerApi;
 
