@@ -98,6 +98,7 @@ export interface AdminWalletPayout {
   status: string;
   affiliate_customer_id: number;
   customer_name: string;
+  preferred_payment?: string | null;
   created_at: string;
   approved_amount: number | null;
   approved_date: string | null;
